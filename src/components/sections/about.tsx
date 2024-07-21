@@ -1,93 +1,79 @@
-import { motion, useScroll, useTransform, Variants } from "framer-motion"
-import { useEffect, useRef } from "react"
+import { easeInOut, motion, MotionValue, useScroll, useTransform } from "framer-motion"
+import { useRef } from "react"
 
-const PARAGRAPH = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Veniam aliquid dolores accusamus neque error, corrupti, iste eos aspernatur commodi incidunt quas debitis? Dolorem laboriosam ab sunt"
+const PARAGRAPH = "Soy federico luna un desarrollador web con 3 años de experiencia en el desarrollo de aplicaciones web, me especializo en el desarrollo de aplicaciones web con tecnologias como React, Next.js, Node.js, Express.js, MongoDB, PostgreSQL, entre otras tecnologias. Me gusta aprender nuevas tecnologias y mejorar mis habilidades como desarrollador web."
 
 const About = () => {
-  const ref = useRef(null)
+  const container = useRef(null);
   const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['center end', 'center center']
+    target: container,
+    offset: ["start center", "end end"]
   })
 
-  const words = PARAGRAPH.split(' ');
-
-  // const variants: Variants = {
-  //   hidden: {
-  //     opacity: 0,
-  //     y: -20
-  //   },
-  //   visible: {
-  //     opacity: 1,
-  //     y: 0
-  //   }
-  // }
-
+  const words = PARAGRAPH.split(" ")
   return (
-    <section className="h-[200vh] text-black p-5 pl-header flex justify-center relative"
-      ref={ref}
-
+    <section
+      className="min-h-screen flex items-center justify-center"
+      ref={container}
     >
-      <div
-        className="sticky top-[20vh] h-fit mt-[40vh]"
+      <p
+        className="max-w-5xl text-black font-semibold text-3xl leading-1 flex flex-wrap"
       >
-        <motion.p
-          className="max-w-3xl text-3xl font-medium flex flex-wrap leading-tight"
-          initial="hidden"
-          animate="visible"
-          transition={{
-            staggerChildren: 0.1,
-            bounce: 0
-          }}
-        // style={{
-        //   opacity: scrollYProgress
-        // }}
-        >
-          {words.map((word, index) => (
-            <Word key={index} index={index} word={word} scrollYProgress={scrollYProgress} words={words} />
-          )
-          )}
-        </motion.p>
-      </div>
+        {
+          words.map((word, i) => {
+            const start = i / words.length
+            const end = start + (1 / words.length)
+            return (
+              <Word key={i} progress={scrollYProgress} range={[start, end]}>
+                {word}
+              </Word>
+            )
+          })
+        }
+      </p>
     </section>
   )
 }
 
-export default About
-
-const Word = ({ index, word, scrollYProgress, words }: {
-  index: number,
-  word: string,
-  scrollYProgress: any,
-  words: string[]
-}) => {
-  const opacity = useTransform(scrollYProgress, [index / words.length, (index + 1) / words.length], [0, 1])
-  const y = useTransform(scrollYProgress, [index / words.length, (index + 1) / words.length], [-10, 0])
-  const letters = word.split('')
-
+const Word = ({ children, progress, range }:
+  {
+    children: string, progress: MotionValue, range: number[]
+  }) => {
+  const amount = range[1] - range[0]
+  const step = amount / children.length
   return (
-    <motion.span
-      className="inline-block mr-3"
-    // style={{
-    //   opacity,
-    //   y
-    // }}
-    >
+    <span className="inline-block mr-5">
       {
-        letters.map((letter, index) => (
-          <motion.span
-            key={index}
-            className="inline-block"
-            style={{
-              opacity,
-              y
-            }}
-          >
-            {letter}
-          </motion.span>
-        ))
+        children.split("").map((char, i) => {
+          const start = range[0] + (i * step);
+          const end = range[0] + ((i + 1) * step)
+          return <Char key={`c_${i}`} progress={progress} range={[start, end]}>{char}</Char>
+        })
       }
-      {/* {word}{' '} */}
-    </motion.span>
+    </span>
   )
 }
+
+const Char = ({ children, progress, range }:
+  { children: string, progress: MotionValue, range: number[] }) => {
+  const opacity = useTransform(
+    progress,
+    range,
+    [0, 1],
+    { ease: easeInOut }
+  )
+  return (
+    <span>
+      <span className="absolute opacity-20">
+        {children}
+      </span>
+      <motion.span
+        className="inline-block"
+        style={{ opacity: opacity }}>
+        {children}
+      </motion.span>
+    </span>
+  )
+}
+
+export default About
